@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -35,7 +36,21 @@ func getInput(prompt string, r *bufio.Reader) (string, error) {
 	return strings.TrimSpace(input), err
 }
 
-// to add ask
+func getIntInput(prompt string, r *bufio.Reader) (int, error) {
+    fmt.Print(prompt)
+    input, err := r.ReadString('\n')
+    if err != nil {
+        return 0, err
+    }
+    input = strings.TrimSpace(input)
+    value, err := strconv.Atoi(input)
+    if err != nil {
+        return 0, err
+    }
+    return value, nil
+}
+
+
 func addTask(id int) {
 	for {
 		reader := bufio.NewReader(os.Stdin)
@@ -85,10 +100,22 @@ func addTask(id int) {
 			return
 		}
 
+		exit, err := getInput("add next task(Y or N): ", reader)
+		if err != nil {
+			fmt.Println("Error appending data:", err)
+			return
+		}
+		switch exit {
+		case "y":
+			continue
+		default:
+			main()
+		}
 	}
 }
 
 func readTask() {
+	fmt.Println("Your Tasks:")
 	content, err := os.ReadFile("todos.txt")
 	if err != nil {
 		fmt.Println("ERR ", err)
@@ -97,27 +124,83 @@ func readTask() {
 	fmt.Println(string(content))
 	main()
 }
-func main() {
-	id := 1
+
+func updateTask(status string) {
 
 	reader := bufio.NewReader(os.Stdin)
+	taskNumStr, err := getInput("enter task no: ", reader)
+	if err != nil {
+		fmt.Println("ERR ", err)
+		return
+	}
 
-	userChoice,err:= getInput("your choice: ",reader)
+	taskNum, err := strconv.Atoi(taskNumStr)
+	if err != nil {
+		fmt.Println("Invalid task number:", err)
+		return
+	}
+
+	task := make(map[int]string)
+	updateStatus, err := getInput("task completed?(y | n) ", reader)
+	if err != nil {
+		fmt.Println("ERR ", err)
+		return
+	}
+
+	switch updateStatus {
+	case "y":
+		status := "completed"
+		task[taskNum] = status
+		main()
+		return
+	default:
+		status := "pending"
+		fmt.Println(status)
+		main()
+		return
+	}
+
+}
+
+func deleteTask() {
+	var id int
+	reader := bufio.NewReader(os.Stdin)
+	id, err := getIntInput("Enter task no. to delete: ", reader)
+	if err != nil {
+		fmt.Println("err deleting task")
+		return
+	}
+	task := make(map[int]string)
+
+	if _, exists := task[id]; exists {
+		delete(task, id)
+		fmt.Printf("Task %d has been deleted.\n", id)
+    } else {
+        fmt.Printf("Task %d not found.\n", id)
+}
+}
+func main() {
+	id := 1
+	var status string
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("\n1. Add Task\n2. Show Tasks\n3. Update Task\n4. Delete Task")
+	userChoice, err := getInput("your choice: ", reader)
 	if err != nil {
 		fmt.Println("invalid user choice ", err)
 		return
 	}
 
 	switch userChoice {
-	case "1":	
-			addTask(id)
+	case "1":
+		addTask(id)
 	case "2":
-			readTask()
-	/*case "3":
-			updateTask()
+		readTask()
+	case "3":
+		updateTask(status)
 	case "4":
-			deleteTask()*/
+		deleteTask()
 	default:
-			fmt.Println("invalid user choice ", err)
+		fmt.Println("invalid user choice ", err)
+		main()
 	}
 }
