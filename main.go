@@ -16,14 +16,14 @@ type task struct {
 }
 
 // new task
-/*func newTask(Title string, Description string, Status string) task {
+func newTask(Title string, Description string, Status string) task {
 	t := task{
 		Title:       Title,
 		Description: Description,
 		Status:      Status,
 	}
 	return t
-}*/
+}
 
 // to get user input
 func getInput(prompt string, r *bufio.Reader) (string, error) {
@@ -41,6 +41,9 @@ func addTask(id int) {
 		reader := bufio.NewReader(os.Stdin)
 
 		title, err := getInput("title: ", reader)
+		if err != nil {
+			fmt.Println("error in adding todo")
+		}
 		description, err := getInput("description: ", reader)
 		if err != nil {
 			fmt.Println("error in adding todo")
@@ -85,7 +88,36 @@ func addTask(id int) {
 	}
 }
 
+func readTask() {
+	content, err := os.ReadFile("todos.txt")
+	if err != nil {
+		fmt.Println("ERR ", err)
+		return
+	}
+	fmt.Println(string(content))
+	main()
+}
 func main() {
 	id := 1
-	addTask(id)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	userChoice,err:= getInput("your choice: ",reader)
+	if err != nil {
+		fmt.Println("invalid user choice ", err)
+		return
+	}
+
+	switch userChoice {
+	case "1":	
+			addTask(id)
+	case "2":
+			readTask()
+	/*case "3":
+			updateTask()
+	case "4":
+			deleteTask()*/
+	default:
+			fmt.Println("invalid user choice ", err)
+	}
 }
